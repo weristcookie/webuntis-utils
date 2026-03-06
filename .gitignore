@@ -1,0 +1,7 @@
+.env
+creds.json
+.creds.json.swp
+.DS_Store
+node_modules
+untis.db
+schueler.db

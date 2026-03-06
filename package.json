@@ -1,0 +1,14 @@
+{
+  "type": "module",
+  "version": "1.0.0",
+  "main": "main.js",
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "fs": "^0.0.1-security",
+    "mysql2": "^3.14.1",
+    "otplib": "latest",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7",
+    "webuntis": "latest"
+  }
+}
