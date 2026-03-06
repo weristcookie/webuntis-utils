@@ -33,7 +33,7 @@ async function main() {
             console.log("Connecting to SQLite...");
 
             const sqliteConn = await open({
-                filename: './untis.db',
+                filename: './lessons.db',
                 driver: sqlite3.Database
             });
 

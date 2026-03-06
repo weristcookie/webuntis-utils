@@ -52,7 +52,7 @@ async function main() {
     case "--sqlite":
       console.log("Connecting to SQLite...");
       const sqliteConn = await open({
-        filename: './schueler.db',
+        filename: './names.db',
         driver: sqlite3.Database
       });
       db = new Database("sqlite", sqliteConn);
