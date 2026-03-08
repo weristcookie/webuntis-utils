@@ -21,6 +21,8 @@ dotenv.config({
   path: path.join(__dirname, "..", ".env")
 });
 
+const untisUrlTemplate = process.env.UNTIS_URL;
+
 
 async function main() {
   let db;
@@ -66,7 +68,10 @@ async function main() {
     )
   `);
 
-  const url = `untis://setschool?url=lgs.webuntis.com&school=lgs&user=${credential.name}&key=${credential.data}&schoolNumber=3994800`;
+  const url = untisUrlTemplate
+    .replace("USERNAME", credential.name)
+    .replace("KEY", credential.data);
+  
   const untis = new WebUntisQR(url, 'custom-identity', Authenticator, URL);
   await untis.login();
 
