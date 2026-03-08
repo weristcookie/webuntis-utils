@@ -6,8 +6,20 @@ import { URL } from 'url';
 import { authenticator as Authenticator } from 'otplib';
 import fs from 'fs';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const credentials = JSON.parse(fs.readFileSync('./creds.json', 'utf-8'));
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const credsPath = path.join(__dirname, '..', 'creds.json');
+const dbPath = path.join(__dirname, '..', 'data', 'lessons.db');
+
+const credentials = JSON.parse(fs.readFileSync(credsPath, 'utf-8'));
+
+dotenv.config({
+  path: path.join(__dirname, "..", ".env")
+});
 
 
 async function main() {
@@ -15,9 +27,7 @@ async function main() {
 
     switch (process.argv[2]) {
         case "--mysql":
-            console.log("Connecting to MySQL...");
-
-            dotenv.config();
+            console.log("Connecting to MySQL...");            
 
             const mysqlConn = await mysql.createConnection({
                 host: process.env.DB_HOST,
@@ -32,15 +42,16 @@ async function main() {
         case "--sqlite":
             console.log("Connecting to SQLite...");
 
+            fs.mkdirSync(path.join(__dirname, '..', 'data'), { recursive: true });
+
             const sqliteConn = await open({
-                filename: './lessons.db',
+                filename: dbPath,
                 driver: sqlite3.Database
             });
 
             db = new Database("sqlite", sqliteConn);
 
             break;
-
         case "--console":
             let lessons = await getLessonsForUser(credentials[process.argv[3]]);
             let totalLessons = 0;
@@ -61,7 +72,6 @@ async function main() {
             console.log("Missed lessons: " + missedLessons + ", or " + (Math.floor(missedLessons / totalLessons * 1000) / 10) + "%");
 
             process.exit();
-
         case "--help":
             console.log("Available commands:");
             console.log("--mysql");
@@ -69,7 +79,6 @@ async function main() {
             console.log("--console <credential_id>")
             console.log("--help")
             process.exit();
-
         default:
             console.log("Invalid usage! Use --help for help!");
             process.exit();

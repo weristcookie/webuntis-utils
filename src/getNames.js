@@ -6,33 +6,21 @@ import { URL } from 'url';
 import { authenticator as Authenticator } from 'otplib';
 import fs from 'fs';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const credential = JSON.parse(fs.readFileSync('./creds.json', 'utf-8'))[0];
+const credsPath = path.join(__dirname, '..', 'creds.json');
+const dbPath = path.join(__dirname, '..', 'data', 'names.db');
 
-class Database {
-  constructor(dbType, db) {
-    this.dbType = dbType; // "sqlite" or "mysql"
-    this.db = db;
-  }
+const credential = JSON.parse(fs.readFileSync(credsPath, 'utf-8'))[0];
 
-  async run(sql, params = []) {
-    if (this.dbType === "sqlite") {
-      return this.db.run(sql, params);
-    } else if (this.dbType === "mysql") {
-      return this.db.execute(sql, params);
-    }
-  }
+dotenv.config({
+  path: path.join(__dirname, "..", ".env")
+});
 
-  async close() {
-    if (this.dbType === "sqlite") {
-      return this.db.close();
-    } else if (this.dbType === "mysql") {
-      return this.db.end();
-    }
-  }
-}
 
 async function main() {
   let db;
@@ -40,26 +28,33 @@ async function main() {
   switch (process.argv[2]) {
     case "--mysql":
       console.log("Connecting to MySQL...");
+
       const mysqlConn = await mysql.createConnection({
         host: process.env.DB_HOST,
         user: process.env.DB_USER,
         password: process.env.DB_PASSWORD,
         database: process.env.DB_NAME
       });
-      db = new Database("mysql", mysqlConn);
-      break;
 
+      db = new Database("mysql", mysqlConn);
+
+      break;
     case "--sqlite":
       console.log("Connecting to SQLite...");
+
+      fs.mkdirSync(path.join(__dirname, '..', 'data'), { recursive: true });
+
       const sqliteConn = await open({
-        filename: './names.db',
+        filename: dbPath,
         driver: sqlite3.Database
       });
-      db = new Database("sqlite", sqliteConn);
-      break;
 
+      db = new Database("sqlite", sqliteConn);
+
+      break;
     default:
       console.log("Invalid usage! Use --mysql or --sqlite");
+
       process.exit();
   }
 
@@ -91,3 +86,26 @@ async function main() {
 }
 
 main().catch(console.error);
+
+class Database {
+  constructor(dbType, db) {
+    this.dbType = dbType; // "sqlite" or "mysql"
+    this.db = db;
+  }
+
+  async run(sql, params = []) {
+    if (this.dbType === "sqlite") {
+      return this.db.run(sql, params);
+    } else if (this.dbType === "mysql") {
+      return this.db.execute(sql, params);
+    }
+  }
+
+  async close() {
+    if (this.dbType === "sqlite") {
+      return this.db.close();
+    } else if (this.dbType === "mysql") {
+      return this.db.end();
+    }
+  }
+}

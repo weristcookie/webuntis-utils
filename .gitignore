@@ -1,7 +1,8 @@
+.DS_Store
+src/.DS_Store
+node_modules
 .env
 creds.json
-.creds.json.swp
-.DS_Store
-node_modules
-lessons.db
-names.db
+*.swp
+*.db
+data
