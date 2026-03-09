@@ -54,31 +54,10 @@ async function main() {
             db = new Database("sqlite", sqliteConn);
 
             break;
-        case "--console":
-            let lessons = await getLessonsForUser(credentials[process.argv[3]]);
-            let totalLessons = 0;
-            let missedLessons = 0;
-            let cancelledLessons = 0;
-
-            for (let lesson of lessons) {           
-                if (!lesson.cancelled) {
-                    totalLessons++;
-                    if (!lesson.attended) missedLessons++;
-                } else {
-                    cancelledLessons++;
-                }
-            }
-            
-            console.log("Active lessons: " + totalLessons);
-            console.log("Cancelled lessons: " + cancelledLessons);
-            console.log("Missed lessons: " + missedLessons + ", or " + (Math.floor(missedLessons / totalLessons * 1000) / 10) + "%");
-
-            process.exit();
         case "--help":
             console.log("Available commands:");
             console.log("--mysql");
             console.log("--sqlite");
-            console.log("--console <credential_id>")
             console.log("--help")
             process.exit();
         default:
