@@ -21,3 +21,10 @@ This script fetches lesson data from one or more WebUntis accounts using [this A
 - `--sqlite`: Write data to a SQLite database located in `data/`
 - `--mysql`: Write data to a MySQL database configured in `.env`
 - `--help`: Print help
+
+## Insightful queries:
+
+- [Amount of missed lessons](queries/amount_of_missed_lessons.sql)
+- [Missed lesson quota](queries/missed_lesson_quota.sql)
+- [Amount of attended/missed lessons per day](queries/lessons_per_day.sql)
+- [Attendance per subject](queries/attendance_per_subject.sql)
