@@ -97,8 +97,6 @@ async function main() {
 }
 
 async function initializeDB(db) {
-    await db.run(`DROP TABLE IF EXISTS lessons`);
-
     await db.run(`
         CREATE TABLE IF NOT EXISTS lessons (
             id VARCHAR(255) NOT NULL,
@@ -161,12 +159,46 @@ async function getLessonsForUser(user) {
     return lessons;
 }
 
+async function insertOrUpdateLessonsSQLite(lessons, db) {
+    for (const lesson of lessons) {
+        await db.run(`
+            INSERT INTO lessons (id, student, subject, date, status, teacher)
+            VALUES (?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id, student)
+            DO UPDATE SET status = excluded.status
+        `, [
+            lesson.id,
+            lesson.student,
+            lesson.subject,
+            lesson.date,
+            lesson.status,
+            lesson.teacher
+        ]);
+    }
+}
+
+async function insertOrUpdateLessonsMySQL(lessons, db) {
+    for (const lesson of lessons) {
+        await db.run(`
+            INSERT INTO lessons (id, student, subject, date, status, teacher)
+            VALUES (?, ?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE status = VALUES(status)
+        `, [
+            lesson.id,
+            lesson.student,
+            lesson.subject,
+            lesson.date,
+            lesson.status,
+            lesson.teacher
+        ]);
+    }
+}
+
 async function insertLessonsIntoDB(lessons, db) {
-    for (let lesson of lessons) {
-        await db.run(
-            `INSERT INTO lessons (id, student, subject, date, status, teacher) VALUES (?, ?, ?, ?, ?, ?)`,
-            [lesson.id, lesson.student, lesson.subject, lesson.date, lesson.status, lesson.teacher]
-        );
+    if (db.dbType === "sqlite") {
+        await insertOrUpdateLessonsSQLite(lessons, db);
+    } else if (db.dbType === "mysql") {
+        await insertOrUpdateLessonsMySQL(lessons, db);
     }
 }
 
