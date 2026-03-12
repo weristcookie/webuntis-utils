@@ -1,7 +1,7 @@
 SELECT
-    count(*) as amount
+    COUNT(*) AS amount
 FROM
     lessons
 WHERE
-    attended = 0
-    AND cancelled = 0
+    status = "missed"
+    OR status = "excused"

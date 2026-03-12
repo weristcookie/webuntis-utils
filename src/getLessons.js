@@ -101,15 +101,13 @@ async function initializeDB(db) {
 
     await db.run(`
         CREATE TABLE IF NOT EXISTS lessons (
-            id VARCHAR(255),
-            name VARCHAR(255),
-            longname VARCHAR(255),
-            cancelled BOOLEAN,
-            attended BOOLEAN,
+            id VARCHAR(255) NOT NULL,
+            student VARCHAR(255) NOT NULL,
+            subject VARCHAR(255),
             date DATE,
-            student VARCHAR(255),
-            excused TINYINT,
-            teacher VARCHAR(255)
+            status VARCHAR(255),
+            teacher VARCHAR(255),
+            PRIMARY KEY (id, student)
         )
     `);
 }
@@ -137,19 +135,27 @@ async function getLessonsForUser(user) {
     for (const entry of timetable) {
         if (entry.date === today && entry.startTime > endTime) continue;
         if (entry.activityType !== 'Unterricht') continue;
-        let cancelled = entry.code === 'cancelled';
-        let { wasAbsent, excused } = isLessonDuringAbsence(entry, absences);
-        let attended = !cancelled && !wasAbsent;
-        if (attended || cancelled) {
-            excused = -1;
+
+        let lessonStatus;
+
+        if (entry.code === "cancelled") {
+            lessonStatus = "cancelled";
+        } else {
+            const { wasAbsent, excused } = isLessonDuringAbsence(entry, absences);
+
+            if (wasAbsent) {
+                lessonStatus = excused ? "excused" : "missed";
+            } else {
+                lessonStatus = "attended";
+            }
         }
-        let name = entry.su[0] ? entry.su[0].name : 'leer';
-        let longname = entry.su[0] ? entry.su[0].longname : 'leer';
+
+        let subject = entry.su[0] ? entry.su[0].longname : 'leer';
         let date = formatDate(entry.date);
         let student = user.name.split('.')[0];
         let teacher = entry.te[0].longname;
 
-        lessons.push(new Lesson(name, longname, cancelled, attended, date, student, entry.id, excused, teacher));
+        lessons.push(new Lesson(entry.id, student, subject, date, lessonStatus, teacher));
     }
 
     return lessons;
@@ -158,8 +164,8 @@ async function getLessonsForUser(user) {
 async function insertLessonsIntoDB(lessons, db) {
     for (let lesson of lessons) {
         await db.run(
-            `INSERT INTO lessons (name, longname, cancelled, attended, date, student, id, excused, teacher) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [lesson.name, lesson.longname, lesson.cancelled, lesson.attended, lesson.date, lesson.student, lesson.id, lesson.excused, lesson.teacher]
+            `INSERT INTO lessons (id, student, subject, date, status, teacher) VALUES (?, ?, ?, ?, ?, ?)`,
+            [lesson.id, lesson.student, lesson.subject, lesson.date, lesson.status, lesson.teacher]
         );
     }
 }
@@ -232,15 +238,12 @@ function getDateAsNumber(date) {
 }
 
 class Lesson {
-    constructor(name, longname, cancelled, attended, date, student, id, excused, teacher) {
-        this.name = name;
-        this.longname = longname;
-        this.cancelled = cancelled;
-        this.attended = attended;
-        this.date = date;
-        this.student = student;
+    constructor(id, student, subject, date, status, teacher) {
         this.id = id;
-        this.excused = excused;
+        this.student = student;
+        this.subject = subject;
+        this.date = date;
+        this.status = status;
         this.teacher = teacher;
     }
 }
