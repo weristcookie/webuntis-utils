@@ -27,6 +27,19 @@ This script fetches lesson data from one or more WebUntis accounts using [this A
 - `--reset`: Reset the database before inserting the data (recommended after updating)
 - `--help`: Print help
 
+## Database schema
+
+Table: `lessons`
+
+| column | type | description |
+|------|------|-------------|
+| id | string | Untis lesson id |
+| student | string | student username |
+| subject | string | subject name |
+| date | date | lesson date |
+| status | string | attended / missed / excused / cancelled |
+| teacher | string | teacher name |
+
 ## Insightful queries
 
 - [Amount of missed lessons](queries/amount_of_missed_lessons.sql)
