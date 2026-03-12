@@ -1,4 +1,4 @@
 [
-    {"name": "abc", "data": "123"},
-    {"name": "def", "data": "456"}
+    {"name": "abc", "key": "123"},
+    {"name": "def", "key": "456"}
 ]

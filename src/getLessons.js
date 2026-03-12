@@ -113,7 +113,7 @@ async function initializeDB(db) {
 async function getLessonsForUser(user) {
     const url = untisUrlTemplate
         .replace("USERNAME", user.name)
-        .replace("KEY", user.data);
+        .replace("KEY", user.key);
 
     const untis = new WebUntisQR(url, 'custom-identity', Authenticator, URL);
     await untis.login();
