@@ -17,7 +17,7 @@ const dbPath = path.join(__dirname, '..', 'data', 'lessons.db');
 
 if (!fs.existsSync(credsPath)) {
     console.log("creds.json file not found, exiting");
-    process.exit();
+    process.exit(1);
 }
 
 const credentials = JSON.parse(fs.readFileSync(credsPath, 'utf-8'));
@@ -26,18 +26,13 @@ dotenv.config({
     path: path.join(__dirname, "..", ".env")
 });
 
-try {
-    process.loadEnvFile(path.join(__dirname, "..", ".env"));
-} catch {
-    console.log(".env file not found, exiting")
-    process.exit();
+if (!process.env.UNTIS_URL) {
+    console.log("UNTIS_URL not set in .env file, exiting");
+    process.exit(1);
 }
 
 const untisUrlTemplate = process.env.UNTIS_URL;
-if (!untisUrlTemplate) {
-    console.log("UNTIS_URL not set in .env file, exiting");
-    process.exit();
-}
+
 
 async function main() {
     let db;
@@ -48,7 +43,7 @@ async function main() {
 
             if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_PASSWORD || !process.env.DB_NAME) {
                 console.log("Database credentials not fully set in .env file, exiting");
-                process.exit();
+                process.exit(1);
             }
 
             const mysqlConn = await mysql.createConnection({
@@ -79,10 +74,10 @@ async function main() {
             console.log("--mysql (--reset)");
             console.log("--sqlite (--reset)");
             console.log("--help");
-            process.exit();
+            process.exit(0);
         default:
             console.log("Invalid usage! Use --help for help!");
-            process.exit();
+            process.exit(1);
     }
 
     let resetFlag = false;
@@ -120,17 +115,17 @@ async function initializeDB(db, resetFlag) {
 }
 
 async function getLessonsForUser(user) {
-    const url = untisUrlTemplate
+    const untisUrl = untisUrlTemplate
         .replace("USERNAME", user.name)
         .replace("KEY", user.key);
 
-    const untis = new WebUntisQR(url, 'custom-identity', Authenticator, URL);
+    const untis = new WebUntisQR(untisUrl, 'custom-identity', Authenticator, URL);
     await untis.login();
 
     const currentDate = new Date();
     const schoolYear = await untis.getCurrentSchoolyear();
     let endDate = schoolYear.endDate.getTime() > currentDate.getTime() ? currentDate : schoolYear.endDate;
-    let endTime = getCurrentTimeHM();
+    let endTime = getCurrentTimeHHMM();
 
     const timetable = await untis.getOwnTimetableForRange(schoolYear.startDate, endDate);
     const absences = await untis.getAbsentLesson(schoolYear.startDate, endDate);
@@ -157,13 +152,15 @@ async function getLessonsForUser(user) {
             }
         }
 
-        let subject = entry.su[0] ? entry.su[0].longname : 'leer';
+        let subject = entry.su?.[0]?.longname ?? "leer";
         let date = formatDate(entry.date);
         let student = user.name.split('.')[0];
-        let teacher = entry.te[0].longname;
+        let teacher = entry.te?.[0]?.longname ?? "leer";
 
         lessons.push(new Lesson(entry.id, student, subject, date, lessonStatus, teacher));
     }
+
+    await untis.logout();
 
     return lessons;
 }
@@ -260,15 +257,11 @@ function formatDate(lessonDate) {
     return `${year}-${month}-${day}`;
 }
 
-function getCurrentTimeHM() {
+function getCurrentTimeHHMM() {
     const now = new Date();
     const hours = now.getHours(); // 0–23
     const minutes = now.getMinutes();
-
-    const hourStr = hours.toString().padStart(2, '0');
-    const minuteStr = minutes.toString().padStart(2, '0');
-
-    return `${hourStr}${minuteStr}`;
+    return hours * 100 + minutes;
 }
 
 function getDateAsNumber(date) {
@@ -312,5 +305,7 @@ class Database {
     }
 }
 
-
-main().catch(console.error);
+main().catch(err => {
+    console.error(err);
+    process.exit(1);
+});
