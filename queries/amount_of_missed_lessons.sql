@@ -3,5 +3,4 @@ SELECT
 FROM
     lessons
 WHERE
-    status = "missed"
-    OR status = "excused"
+    status IN ('missed', 'excused');
