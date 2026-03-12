@@ -23,7 +23,7 @@ if (!fs.existsSync(credsPath)) {
 const credentials = JSON.parse(fs.readFileSync(credsPath, 'utf-8'));
 
 dotenv.config({
-  path: path.join(__dirname, "..", ".env")
+    path: path.join(__dirname, "..", ".env")
 });
 
 try {
@@ -76,16 +76,21 @@ async function main() {
             break;
         case "--help":
             console.log("Available commands:");
-            console.log("--mysql");
-            console.log("--sqlite");
-            console.log("--help")
+            console.log("--mysql (--reset)");
+            console.log("--sqlite (--reset)");
+            console.log("--help");
             process.exit();
         default:
             console.log("Invalid usage! Use --help for help!");
             process.exit();
     }
 
-    await initializeDB(db);
+    let resetFlag = false;
+    if (process.argv.length > 3 && process.argv[3] === "--reset") {
+        resetFlag = true;
+    }
+
+    await initializeDB(db, resetFlag);
 
     for (let user of credentials) {
         let lessons = await getLessonsForUser(user);
@@ -96,7 +101,11 @@ async function main() {
     await db.close();
 }
 
-async function initializeDB(db) {
+async function initializeDB(db, resetFlag) {
+    if (resetFlag) {
+        await db.run(`DROP TABLE IF EXISTS lessons`);
+    }
+
     await db.run(`
         CREATE TABLE IF NOT EXISTS lessons (
             id VARCHAR(255) NOT NULL,
@@ -281,26 +290,26 @@ class Lesson {
 }
 
 class Database {
-  constructor(dbType, db) {
-    this.dbType = dbType;
-    this.db = db;
-  }
-
-  async run(sql, params = []) {
-    if (this.dbType === "sqlite") {
-      return this.db.run(sql, params);
-    } else if (this.dbType === "mysql") {
-      return this.db.execute(sql, params);
+    constructor(dbType, db) {
+        this.dbType = dbType;
+        this.db = db;
     }
-  }
 
-  async close() {
-    if (this.dbType === "sqlite") {
-      return this.db.close();
-    } else if (this.dbType === "mysql") {
-      return this.db.end();
+    async run(sql, params = []) {
+        if (this.dbType === "sqlite") {
+            return this.db.run(sql, params);
+        } else if (this.dbType === "mysql") {
+            return this.db.execute(sql, params);
+        }
     }
-  }
+
+    async close() {
+        if (this.dbType === "sqlite") {
+            return this.db.close();
+        } else if (this.dbType === "mysql") {
+            return this.db.end();
+        }
+    }
 }
 
 

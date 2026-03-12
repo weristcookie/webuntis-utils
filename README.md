@@ -4,6 +4,10 @@
 
 This script fetches lesson data from one or more WebUntis accounts using [this API](https://github.com/SchoolUtils/WebUntis) and stores it in a local database. This allows for easy creation of dashboards (e.g. using [Metabase](https://github.com/metabase/metabase)) to track lessons and analyze student attendance.
 
+## Requirements
+
+- [Node.js](https://nodejs.org/en/download/current)
+
 ## Getting started
 
 1. Clone the repository
@@ -18,8 +22,9 @@ This script fetches lesson data from one or more WebUntis accounts using [this A
 
 ## Commands
 
-- `--sqlite`: Write data to a SQLite database located in `data/`
-- `--mysql`: Write data to a MySQL database configured in `.env`
+- `--sqlite (--reset)`: Insert data into a SQLite database located in `data/`
+- `--mysql (--reset)`: Insert data into a MySQL database configured in `.env`
+- `--reset`: Reset the database before inserting the data (recommended after updating)
 - `--help`: Print help
 
 ## Insightful queries
