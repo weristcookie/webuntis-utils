@@ -15,21 +15,41 @@ const __dirname = path.dirname(__filename);
 const credsPath = path.join(__dirname, '..', 'creds.json');
 const dbPath = path.join(__dirname, '..', 'data', 'lessons.db');
 
+if (!fs.existsSync(credsPath)) {
+    console.log("creds.json file not found, exiting");
+    process.exit();
+}
+
 const credentials = JSON.parse(fs.readFileSync(credsPath, 'utf-8'));
 
 dotenv.config({
   path: path.join(__dirname, "..", ".env")
 });
 
-const untisUrlTemplate = process.env.UNTIS_URL;
+try {
+    process.loadEnvFile(path.join(__dirname, "..", ".env"));
+} catch {
+    console.log(".env file not found, exiting")
+    process.exit();
+}
 
+const untisUrlTemplate = process.env.UNTIS_URL;
+if (!untisUrlTemplate) {
+    console.log("UNTIS_URL not set in .env file, exiting");
+    process.exit();
+}
 
 async function main() {
     let db;
 
     switch (process.argv[2]) {
         case "--mysql":
-            console.log("Connecting to MySQL...");            
+            console.log("Connecting to MySQL...");
+
+            if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_PASSWORD || !process.env.DB_NAME) {
+                console.log("Database credentials not fully set in .env file, exiting");
+                process.exit();
+            }
 
             const mysqlConn = await mysql.createConnection({
                 host: process.env.DB_HOST,
