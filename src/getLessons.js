@@ -87,10 +87,18 @@ async function main() {
 
     await initializeDB(db, resetFlag);
 
+    if (db.dbType === "sqlite") {
+        await db.run(`BEGIN TRANSACTION`);
+    }
+
     for (let user of credentials) {
         let lessons = await getLessonsForUser(user);
         await insertLessonsIntoDB(lessons, db);
         console.log(user.name + " done")
+    }
+
+    if (db.dbType === "sqlite") {
+        await db.run(`COMMIT`);
     }
 
     await db.close();
